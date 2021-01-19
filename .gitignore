@@ -1,5 +1,5 @@
 /target
-/.idea
+/.idea/*
 /content
 Cargo.lock
 .DS_Store
