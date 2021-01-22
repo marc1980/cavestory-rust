@@ -4,7 +4,9 @@ extern crate sdl2;
 use std::{collections::HashMap};
 use sdl2::{Sdl, image::{InitFlag, LoadTexture}, init, rect::{Point, Rect}, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
 
-use super::Sprite;
+use components::Sprite;
+
+use super::components;
 
 pub struct Graphics {
     pub sdl_context: Sdl,
