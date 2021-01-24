@@ -7,7 +7,7 @@ use super::PlayerStatus;
 #[derive(Component, Debug, Clone)]
 #[storage(VecStorage)]
 pub struct Player {
-    pub speed: i32,
+    pub animation_frame: i32,
 }
 
 #[derive(Component, Debug)]
@@ -20,7 +20,8 @@ pub struct Position {
 #[storage(VecStorage)]
 pub struct Movement {
     pub speed: i32,
-    pub direction: PlayerStatus
+    pub direction: PlayerStatus,
+    pub animation_frame: i32
 }
 
 #[derive(Component, Debug, Clone)]
@@ -36,26 +37,5 @@ pub struct Sprite {
 pub enum SpriteSheet {
     MyChar,
 }
-// pub struct Sprite<'a> {
-// 	pub source_rect: Rect,
-// 	pub sprite_sheet: &'a str,
-// 	// bounding_box: Rectangle,
-// 	// x: i32, 
-//     // y: i32
-// }
 
-// impl Sprite<'_> {
-
-//     pub fn new( filepath: &str, sourceX: i32, sourceY: i32, width: u32, height: u32,
-//         posX: i32, posY: i32) -> Sprite {
-
-        
-//         Sprite{
-//             source_rect: Rect::new(sourceX, sourceY, width, height) ,
-//             sprite_sheet: filepath,
-//         }
-//     }
-
-
-// }
 

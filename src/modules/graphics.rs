@@ -39,9 +39,9 @@ impl Graphics {
         }
     }
     
-    pub fn render(&mut self, sprite: Sprite, location: Point, texture: &Texture) {
+    pub fn render(&mut self, sprite: &Sprite, location: Point, texture: &Texture) {
 
-       // let texture = self.load_image(sprite.sprite_sheet);
+       self.canvas.clear();
 
         let destination_rect = Rect::new(
             location.x, 
@@ -50,22 +50,7 @@ impl Graphics {
             sprite.source_rect.height() *2);
 
         self.canvas.copy( texture, sprite.source_rect, destination_rect).expect("texture copy failed");
-
-    }
-
-    // pub fn load_image<'a>(&'a mut self, filepath: &str) -> &Texture<'a> {
-    //     // if !self.spritesheets.contains_key(filepath) {
-    //     //     self.spritesheets.insert(filepath.to_string(), self.texture_creator.load_texture(filepath).expect("failed to load sprite"));
-    //     // }
-    //     return self.spritesheets.get(filepath).unwrap();
-    // }
-    
-    pub fn flip(&mut self) {
         self.canvas.present();
-    }
-    
-    pub fn clear(&mut self) {
-        self.canvas.clear();
     }
 }
 

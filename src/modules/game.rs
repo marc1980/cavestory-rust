@@ -2,23 +2,25 @@ extern crate sdl2;
 use sdl2::{EventPump, event::Event, image::LoadTexture, rect::{Point, Rect}};
 use sdl2::keyboard::Keycode;
 use specs::prelude::*;
-use std::{cmp, collections::HashMap, time::Instant};
+use std::{cmp, collections::HashMap, thread, time::{Duration, Instant}};
 use components::{Sprite, SpriteSheet};
-use super::{PlayerStatus, Graphics, Input, Player, Movement, Physics, Position, components};
+use super::{Animation, Graphics, Input, Level, Movement, Physics, Player, PlayerStatus, Position, components};
 
-const MAX_FPS: u128 = 50;
-const MAX_FRAME_TIME: u128 = 1000 / MAX_FPS; 
+const MAX_FPS: u64 = 20;
+const MAX_FRAME_TIME: u64 = 1000 / MAX_FPS; 
 
 pub struct Game {
     pub graphics: Graphics,
-    LAST_UPDATE_TIME: u128
+    last_update_time: Instant,
+    level: Level
 }
 
 impl Game {
     pub fn new() -> Game {
         return Game {
             graphics: Graphics::new(),
-            LAST_UPDATE_TIME: Instant::now().elapsed().as_millis()
+            last_update_time: Instant::now(),
+            level: Level::new()
         }
     }
 
@@ -32,16 +34,19 @@ impl Game {
         world.register::<Player>();
         world.register::<Position>();
         world.register::<Movement>();
+        world.register::<Sprite>();
     
         let player = world.create_entity()
-            .with(Player {speed: 0})
-            .with(Position{point: Point::new(100, 100)})
-            .with(Movement {speed: 0, direction: PlayerStatus::WalkRight})
+            .with(Player {animation_frame: 0})
+            .with(Position {point: Point::new(100, 100)})
+            .with(Movement {speed: 0, direction: PlayerStatus::Stopped, animation_frame: 0})
+            .with(Sprite { spritesheet: SpriteSheet::MyChar, source_rect: Rect::new(0, 0, 16, 16)})
             .build();
 
         let mut dispatcher = DispatcherBuilder::new()
             .with(Input, "input", &[])
             .with(Physics, "physics", &["input"])
+            .with(Animation, "animation", &["input"])
             .build();
 
         dispatcher.setup(&mut world);       
@@ -69,34 +74,29 @@ impl Game {
                         _ => {}
                     }
             }
-    
-            let now = Instant::now().elapsed().as_millis();
-            let elapsed= cmp::min(now, MAX_FRAME_TIME);
-            self.LAST_UPDATE_TIME = now;
 
             world.insert(player_status_event);
 
             dispatcher.dispatch(&mut world);
-
-
-            update(elapsed);
+            world.maintain();
     
-            self.graphics.clear();
-
-            let player_pos = world.read_component::<Position>();
-            let player_point = player_pos.get(player).unwrap();
-            self.graphics.render(Sprite { spritesheet: SpriteSheet::MyChar, source_rect: Rect::new(0, 0, 16, 16)},
-            player_point.point, spritesheets.get(&SpriteSheet::MyChar).unwrap());
+            let player_pos = world.read_component::<Position>().get(player).unwrap().point;
+            self.graphics.render(world.read_component::<Sprite>().get(player).unwrap(),
+            player_pos, spritesheets.get(&SpriteSheet::MyChar).unwrap());
             
-            self.graphics.flip();
+            let elapsed = self.last_update_time.elapsed().as_millis() as u64;
+           // println!("elapsed: {}",elapsed);
 
+            if elapsed < MAX_FRAME_TIME {
+               // println!("wait");
+                thread::sleep(Duration::from_millis(MAX_FRAME_TIME - elapsed));
+            }
+            self.last_update_time = Instant::now();
         }
     }
 }
 
-fn update(elapsed: u128) {
-   // println!("update: {}", elapsed);
-}
+
 
 
 

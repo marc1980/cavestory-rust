@@ -22,13 +22,23 @@ impl <'a> System<'a> for Input {
                             mov.speed = 1;
                         },
                         Stopped => {
+                            mov.direction = PlayerStatus::Stopped;
                             mov.speed = 0;
+                            mov.animation_frame = 0;
                         }
                     }
                 }
             },
             None => {
                 // keep moving
+                for (_, mov) in (&data.1, &mut data.2).join() {
+                    if mov.animation_frame < 3 {
+                        mov.animation_frame = mov.animation_frame + 1;
+                    }
+                    else {
+                        mov.animation_frame = 0;
+                    }
+                }
             }
         };
 
