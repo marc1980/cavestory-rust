@@ -3,6 +3,8 @@ use specs::prelude::*;
 
 use super::{PlayerStatus, Movement, Position};
 
+const GRAVITY: i32 = 3;
+
 pub struct Physics;
 
 impl <'a> System<'a> for Physics {
@@ -12,13 +14,13 @@ impl <'a> System<'a> for Physics {
         for (mov, pos) in (&data.0, &mut data.1).join() {
             match mov.direction {
                 PlayerStatus::WalkLeft => {
-                    pos.point = pos.point.offset(-mov.speed, 0);
+                    pos.point = pos.point.offset(-mov.speed, GRAVITY);
                 },
                 PlayerStatus::WalkRight => {
-                    pos.point = pos.point.offset(mov.speed, 0);
+                    pos.point = pos.point.offset(mov.speed, GRAVITY);
                 },
                 PlayerStatus::Stopped => {
-
+                    pos.point = pos.point.offset(0, GRAVITY);
                 }
             }
         }

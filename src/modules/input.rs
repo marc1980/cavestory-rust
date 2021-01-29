@@ -3,6 +3,7 @@ use specs::{Read, ReadStorage, System, WriteStorage, Join};
 use self::PlayerStatus::*;
 use super::{PlayerStatus, Player, Movement};
 
+const WALKING_SPEED: i32 = 5;
 pub struct Input;
 
 impl <'a> System<'a> for Input {
@@ -15,11 +16,11 @@ impl <'a> System<'a> for Input {
                     match dir {
                         WalkLeft => {
                             mov.direction = PlayerStatus::WalkLeft;
-                            mov.speed = 1;
+                            mov.speed = WALKING_SPEED;
                         },
                         WalkRight => {
                             mov.direction = PlayerStatus::WalkRight;
-                            mov.speed = 1;
+                            mov.speed = WALKING_SPEED;
                         },
                         Stopped => {
                             mov.direction = PlayerStatus::Stopped;

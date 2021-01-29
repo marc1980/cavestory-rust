@@ -2,7 +2,7 @@ extern crate sdl2;
 use sdl2::{EventPump, event::Event, image::LoadTexture, rect::{Point, Rect}};
 use sdl2::keyboard::Keycode;
 use specs::prelude::*;
-use std::{cmp, collections::HashMap, thread, time::{Duration, Instant}};
+use std::{collections::HashMap, thread, time::{Duration, Instant}};
 use components::{Sprite, SpriteSheet};
 use super::{Animation, Graphics, Input, Level, Movement, Physics, Player, PlayerStatus, Position, components};
 
@@ -29,6 +29,7 @@ impl Game {
         let texture_creator = self.graphics.canvas.texture_creator();
         let mut spritesheets =  HashMap::new();
         spritesheets.insert(SpriteSheet::MyChar, texture_creator.load_texture("./content/sprites/MyChar.png").unwrap());
+        spritesheets.insert(SpriteSheet::PrtCave, texture_creator.load_texture("./content/sprites/PrtCave.png").unwrap());
 
         let mut world = World::new();
         world.register::<Player>();
@@ -82,13 +83,11 @@ impl Game {
     
             let player_pos = world.read_component::<Position>().get(player).unwrap().point;
             self.graphics.render(world.read_component::<Sprite>().get(player).unwrap(),
-            player_pos, spritesheets.get(&SpriteSheet::MyChar).unwrap());
+                player_pos, &self.level.get_tile_map(), &spritesheets);
             
             let elapsed = self.last_update_time.elapsed().as_millis() as u64;
-           // println!("elapsed: {}",elapsed);
 
             if elapsed < MAX_FRAME_TIME {
-               // println!("wait");
                 thread::sleep(Duration::from_millis(MAX_FRAME_TIME - elapsed));
             }
             self.last_update_time = Instant::now();

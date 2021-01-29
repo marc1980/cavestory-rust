@@ -24,18 +24,22 @@ pub struct Movement {
     pub animation_frame: i32
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct Sprite {
-    /// The specific spritesheet to render from
     pub spritesheet: SpriteSheet,
-    /// The current region of the spritesheet to be rendered
     pub source_rect: Rect,
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, serde::Deserialize, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum SpriteSheet {
     MyChar,
+    PrtCave,
+    NpcSym,
 }
 
-
+#[derive(Component, Debug)]
+#[storage(VecStorage)]
+pub struct Render {
+    pub sprite: Sprite,
+    pub destination_rect: Rect,
+}
