@@ -2,13 +2,12 @@
 extern crate sdl2;
 
 use std::{collections::HashMap};
-use sdl2::{Sdl, image::{InitFlag}, init, rect::{Point, Rect}, render::{Canvas, Texture}, video::{Window}};
+use sdl2::{Sdl, image::{InitFlag}, init, rect::Rect, render::{Canvas, Texture}, video::{Window}};
 
 use components::Sprite;
 
 use super::{SpriteSheet, components, level::TileMap};
-
-const SCALE: u32 = 2;
+use crate::modules::Rectangle;
 
 pub struct Graphics {
     pub sdl_context: Sdl,
@@ -34,7 +33,7 @@ impl Graphics {
         }
     }
     
-    pub fn render(&mut self, sprite: &Sprite, location: Point, background: &TileMap, textures: &HashMap<SpriteSheet, Texture>) {
+    pub fn render(&mut self, sprite: &Sprite, location: Rectangle, background: &TileMap, textures: &HashMap<SpriteSheet, Texture>) {
 
        self.canvas.clear();
 
@@ -46,12 +45,12 @@ impl Graphics {
         }
 
         // render player
-       let player_texture = textures.get(&sprite.spritesheet).unwrap();
+        let player_texture = textures.get(&sprite.spritesheet).unwrap();
         let destination_rect = Rect::new(
-            location.x, 
-            location.y,
-            sprite.source_rect.width() * SCALE,
-            sprite.source_rect.height() * SCALE);
+            location.x.round() as i32,
+            location.y.round() as i32,
+            location.width.round() as u32,
+            location.height.round() as u32);
 
         self.canvas.copy( player_texture, sprite.source_rect, destination_rect).expect("texture copy failed");
         self.canvas.present();

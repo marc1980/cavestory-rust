@@ -6,6 +6,7 @@ use super::SpriteSheet;
 use sdl2::rect::Rect;
 use serde::Deserialize;
 use quick_xml::de::{from_str};
+use crate::modules::Rectangle;
 
 pub struct Level {
     map: Map,
@@ -21,7 +22,8 @@ struct Map {
     tilesets: Vec<Tileset>,
     #[serde(rename = "layer", default)]
     layers: Vec<Layer>,
-   // objectgroup: Objectgroup,
+    #[serde(rename = "objectgroup", default)]
+    objectgroups: Vec<Objectgroup>,
 }
 #[derive(Debug, Deserialize, PartialEq)]
 struct Tileset {
@@ -55,10 +57,31 @@ struct Tile {
     gid: u32
 }
 
+#[derive(Debug, Deserialize, PartialEq)]
+struct Objectgroup {
+    name: String,
+    #[serde(rename = "object", default)]
+    objects: Vec<Object>
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+struct Object {
+    id: u32,
+    x: f32,
+    y: f32,
+    width: Option<f32>,
+    height: Option<f32>
+}
+
 pub struct TileMap {
     pub tiles_texture: SpriteSheet,
     pub source: Vec<Rect>,
     pub dest: Vec<Rect>,
+}
+
+#[derive(Debug)]
+pub struct Collisions {
+    pub blocks: Vec<Rectangle>
 }
 
 impl Level {
@@ -86,7 +109,6 @@ impl Level {
         let mut source = Vec::new();
         let mut dest = Vec::new();
 
-       // let tile_width = self.map.width / self.map.layers.first().unwrap().width;
         let tiles_source: u32 = 16;
         let tiles_destination: u32 = 20;
         let tile_size_source_px: u32 = 16;
@@ -105,8 +127,7 @@ impl Level {
                     let dest_rect = Rect::new(dest_x as i32, dest_y as i32, tile_size_dest_px, tile_size_dest_px);
                     source.push(source_rect);
                     dest.push(dest_rect);
-                //  println!("idx {} - gid {} - source_x {} - source_y {} - dest_x {} - dest_y {}", idx, gid, source_rect.x(), source_rect.y(), dest_rect.x(), dest_rect.y());
-                }    
+                }
             }
         }
         TileMap {
@@ -114,7 +135,27 @@ impl Level {
             source,
             dest
         }
+    }
 
+    pub fn get_collisions(&self, scale: f32) -> Collisions {
+        let mut blocks = Vec::new();
+
+        for object in self.map.objectgroups
+            .iter()
+            .find(|og| og.name == "collisions")
+            .expect("collisions not found in level file")
+            .objects
+            .iter() {
+                blocks.push(Rectangle {
+                    x: object.x * scale,
+                    y: object.y * scale,
+                    width: object.width.expect("collision: no width") * scale,
+                    height: object.height.expect("collision: no height") * scale
+                });
+        }
+        Collisions {
+            blocks
+        }
     }
 }
 

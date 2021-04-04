@@ -1,4 +1,3 @@
-
 use specs::prelude::*;
 
 use super::{PlayerStatus, Movement, Position};
@@ -14,13 +13,13 @@ impl <'a> System<'a> for Physics {
         for (mov, pos) in (&data.0, &mut data.1).join() {
             match mov.direction {
                 PlayerStatus::WalkLeft => {
-                    pos.point = pos.point.offset(-mov.speed, GRAVITY);
+                    pos.rect.offset(-mov.speed, GRAVITY);
                 },
                 PlayerStatus::WalkRight => {
-                    pos.point = pos.point.offset(mov.speed, GRAVITY);
+                    pos.rect.offset(mov.speed, GRAVITY);
                 },
                 PlayerStatus::Stopped => {
-                    pos.point = pos.point.offset(0, GRAVITY);
+                    pos.rect.offset(0, GRAVITY);
                 }
             }
         }
