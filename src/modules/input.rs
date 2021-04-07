@@ -1,47 +1,46 @@
-use specs::{Read, ReadStorage, System, WriteStorage, Join};
+use specs::{Read, ReadStorage, System, WriteStorage, Join, ReadExpect};
 
-use self::PlayerStatus::*;
-use super::{PlayerStatus, Player, Movement};
+use self::PlayerDirection::*;
+use super::{PlayerDirection, Player, Movement};
+use crate::modules::PlayerStatus;
 
-const WALKING_SPEED: i32 = 5;
+const WALKING_SPEED: i32 = 10;
 pub struct Input;
 
 impl <'a> System<'a> for Input {
-    type SystemData  =  (Read<'a, Option<PlayerStatus>>, ReadStorage<'a, Player>, WriteStorage<'a, Movement> );
+    type SystemData  =  (ReadExpect<'a, PlayerStatus>, ReadStorage<'a, Player>, WriteStorage<'a, Movement> );
 
     fn run(&mut self, mut data: Self::SystemData) {
-        match *data.0 {
-            Some(dir) => {
-                for (_, mov) in (&data.1, &mut data.2).join() {
+        let (ps, pl, mut mov) = data;
+        for (_, mov) in (&pl, &mut mov).join() {
+            mov.is_jumping = ps.is_jumping;
+            match ps.direction {
+                Some(dir) => {
                     match dir {
-                        WalkLeft => {
-                            mov.direction = PlayerStatus::WalkLeft;
+                        Left => {
+                            mov.direction = PlayerDirection::Left;
                             mov.speed = WALKING_SPEED;
-                        },
-                        WalkRight => {
-                            mov.direction = PlayerStatus::WalkRight;
+                        }
+                        Right => {
+                            mov.direction = PlayerDirection::Right;
                             mov.speed = WALKING_SPEED;
-                        },
+                        }
                         Stopped => {
-                            mov.direction = PlayerStatus::Stopped;
+                            mov.direction = PlayerDirection::Stopped;
                             mov.speed = 0;
                             mov.animation_frame = 0;
                         }
                     }
-                }
-            },
-            None => {
-                // keep moving
-                for (_, mov) in (&data.1, &mut data.2).join() {
+                },
+                None => {
+                    // keep moving
                     if mov.animation_frame < 3 {
                         mov.animation_frame = mov.animation_frame + 1;
-                    }
-                    else {
+                    } else {
                         mov.animation_frame = 0;
                     }
                 }
             }
         };
-
     }
 }

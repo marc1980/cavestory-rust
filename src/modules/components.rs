@@ -2,7 +2,7 @@ use sdl2::rect::Rect;
 use specs::prelude::*;
 use specs_derive::Component;
 
-use super::PlayerStatus;
+use super::PlayerDirection;
 use crate::modules::level::Collisions;
 use std::cmp::Ordering::Equal;
 
@@ -16,14 +16,16 @@ pub struct Player {
 #[storage(VecStorage)]
 pub struct Position {
     pub rect: Rectangle,
+    pub is_grounded: bool
 }
 
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct Movement {
     pub speed: i32,
-    pub direction: PlayerStatus,
-    pub animation_frame: i32
+    pub direction: PlayerDirection,
+    pub animation_frame: i32,
+    pub is_jumping: bool
 }
 
 #[derive(Component, Debug, Copy, Clone)]
@@ -41,6 +43,7 @@ impl Rectangle {
     pub fn get_top(&self) -> f32 { return self.y; }
     pub fn get_bottom(&self) -> f32 { return self.y + self.height; }
     pub fn offset(&mut self, x: i32, y: i32) { self.x += x as f32; self.y += y as f32; }
+    pub fn offset_y(&mut self, y: i32) { self.y += y as f32; }
     pub fn collides_with(&self, other: &Rectangle) -> bool {
         return self.get_right() >= other.get_left() &&
         self.get_left() <= other.get_right() &&

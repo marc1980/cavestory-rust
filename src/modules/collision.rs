@@ -18,7 +18,10 @@ impl <'a> System<'a> for Collision {
                     let side = pos.rect.get_colliding_side(col);
                    // println!("col: {}, {} - {}, {} -- {:?}", col.x, col.y, col.getRight(), col.getBottom(), side);
                     match side {
-                        Some(CollisionType::Bottom) => pos.rect.y = col.y - pos.rect.height,
+                        Some(CollisionType::Bottom) => {
+                            pos.rect.y = col.y - pos.rect.height;
+                            pos.is_grounded = true;
+                        },
                         Some(CollisionType::Top) => pos.rect.y = col.y + col.height,
                         Some(CollisionType::Left) => pos.rect.x = col.x + col.width,
                         Some(CollisionType::Right) => pos.rect.x = col.x - pos.rect.width,

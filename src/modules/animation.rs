@@ -2,7 +2,7 @@
 use sdl2::rect::Rect;
 use specs::prelude::*;
 
-use super::{Movement, PlayerStatus, Sprite};
+use super::{Movement, PlayerDirection, Sprite};
 
 pub struct Animation;
 
@@ -12,23 +12,23 @@ impl <'a> System<'a> for Animation {
     fn run(&mut self, mut data: Self::SystemData) {
         for (mov, spr) in (&data.0, &mut data.1).join() {
             match mov.direction {
-                PlayerStatus::WalkLeft => {
+                PlayerDirection::Left => {
                    spr.source_rect = Rect::new(
                        mov.animation_frame * 16,
                        0,
                        16,
                        16
                    ); 
-                },
-                PlayerStatus::WalkRight => {
+                }
+                PlayerDirection::Right => {
                     spr.source_rect = Rect::new(
                         mov.animation_frame * 16,
                         16,
                         16,
                         16
                     ); 
-                },
-                PlayerStatus::Stopped => {
+                }
+                PlayerDirection::Stopped => {
                     spr.source_rect = Rect::new(
                         0,
                         0,

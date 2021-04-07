@@ -157,5 +157,15 @@ impl Level {
             blocks
         }
     }
+
+    pub fn get_spawn_point(&self, scale: f32) -> (f32, f32) {
+        let objects: &Vec<Object> = &self.map.objectgroups
+            .iter()
+            .find(|og| og.name == "spawn points")
+            .expect("spawn points not found in level")
+            .objects;
+        let object = objects.first().expect("spawn point not found");
+        return ((object.x * scale), (object.y * scale))
+    }
 }
 

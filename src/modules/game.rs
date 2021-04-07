@@ -4,8 +4,9 @@ use sdl2::keyboard::Keycode;
 use specs::prelude::*;
 use std::{collections::HashMap, thread, time::{Duration, Instant}};
 use components::{Sprite, SpriteSheet};
-use super::{Animation, Graphics, Input, Level, Movement, Physics, Player, PlayerStatus, Position, components};
-use crate::modules::{CollisionTargets, Collision, Rectangle};
+use super::{Animation, Graphics, Input, Level, Movement, Physics, Player, PlayerDirection, Position, components};
+use crate::modules::{CollisionTargets, Collision, Rectangle, PlayerStatus};
+use self::sdl2::mouse::SystemCursor::No;
 
 const MAX_FPS: u64 = 20;
 const MAX_FRAME_TIME: u64 = 1000 / MAX_FPS;
@@ -28,8 +29,6 @@ impl Game {
     }
 
     pub fn game_loop(&mut self) {
-        // let col = self.level.get_collisions();
-
         let texture_creator = self.graphics.canvas.texture_creator();
         let mut spritesheets =  HashMap::new();
         spritesheets.insert(
@@ -47,22 +46,28 @@ impl Game {
         world.register::<Movement>();
         world.register::<CollisionTargets>();
         world.register::<Sprite>();
-    
+
+        let spawn_point = self.level.get_spawn_point(SCALE);
         let player = world.create_entity()
             .with(Player {
                 animation_frame: 0
             })
             .with(Position {
                 rect: Rectangle {
-                    x: 320.0, y: 260.0,
+                    x: spawn_point.0, y: spawn_point.1,
                     width: BLOCK_SIZE_PX as f32 * SCALE,
                     height: BLOCK_SIZE_PX as f32 * SCALE
-                }})
+                },
+                is_grounded: false
+            })
             .with(Movement {
-                speed: 0, direction: PlayerStatus::Stopped, animation_frame: 0
+                speed: 0,
+                direction: PlayerDirection::Stopped,
+                animation_frame: 0,
+                is_jumping : false
             })
             .with(CollisionTargets {
-                collisions: self.level.get_collisions(2.0)
+                collisions: self.level.get_collisions(SCALE)
             })
             .with(Sprite {
                 spritesheet: SpriteSheet::MyChar,
@@ -81,9 +86,15 @@ impl Game {
         
         let mut event_pump: EventPump =
             self.graphics.sdl_context.event_pump().expect("failed to load event pump");
-        
+
+        let mut player_status_event = PlayerStatus {
+            direction: Some(PlayerDirection::Stopped),
+            is_jumping: false
+        };
+
         'running: loop {
-            let mut player_status_event: Option<PlayerStatus> = None;
+            player_status_event.direction = None;
+            player_status_event.is_jumping = false;
             for event in event_pump.poll_iter() {
                 match event {
                     Event::Quit { .. } | Event::KeyDown {
@@ -91,14 +102,17 @@ impl Game {
                         ..
                     } => break 'running,
                     Event::KeyDown { keycode: Some(Keycode::Left), repeat: false, .. } => {
-                        player_status_event = Some(PlayerStatus::WalkLeft);
+                        player_status_event.direction = Some(PlayerDirection::Left);
                     },
                     Event::KeyDown { keycode: Some(Keycode::Right), repeat: false, .. } => {
-                        player_status_event = Some(PlayerStatus::WalkRight);
+                        player_status_event.direction = Some(PlayerDirection::Right);
                     },
-                    Event::KeyUp { keycode: Some(Keycode::Left), repeat: false, .. } |
-                    Event::KeyUp { keycode: Some(Keycode::Right), repeat: false, .. }  => {
-                        player_status_event = Some(PlayerStatus::Stopped);
+                    Event::KeyDown { keycode: Some(Keycode::Z), repeat: false, .. } => {
+                        player_status_event.is_jumping = true;
+                    },
+                    Event::KeyUp { keycode: Some(Keycode::Right), repeat: false, .. } |
+                    Event::KeyUp { keycode: Some(Keycode::Left), repeat: false, .. }  => {
+                        player_status_event.direction = Some(PlayerDirection::Stopped);
                     },
                         _ => {}
                     }
