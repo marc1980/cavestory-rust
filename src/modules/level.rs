@@ -6,7 +6,7 @@ use super::SpriteSheet;
 use sdl2::rect::Rect;
 use serde::Deserialize;
 use quick_xml::de::{from_str};
-use crate::modules::Rectangle;
+use crate::modules::{Rectangle, Point, Slope};
 
 pub struct Level {
     map: Map,
@@ -64,13 +64,19 @@ struct Objectgroup {
     objects: Vec<Object>
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 struct Object {
     id: u32,
     x: f32,
     y: f32,
     width: Option<f32>,
-    height: Option<f32>
+    height: Option<f32>,
+    polyline: Option<Polyline>
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+struct Polyline {
+    points: String
 }
 
 pub struct TileMap {
@@ -81,7 +87,8 @@ pub struct TileMap {
 
 #[derive(Debug)]
 pub struct Collisions {
-    pub blocks: Vec<Rectangle>
+    pub blocks: Vec<Rectangle>,
+    pub slopes: Vec<Slope>
 }
 
 impl Level {
@@ -137,35 +144,74 @@ impl Level {
         }
     }
 
-    pub fn get_collisions(&self, scale: f32) -> Collisions {
-        let mut blocks = Vec::new();
-
-        for object in self.map.objectgroups
-            .iter()
-            .find(|og| og.name == "collisions")
-            .expect("collisions not found in level file")
-            .objects
-            .iter() {
-                blocks.push(Rectangle {
-                    x: object.x * scale,
-                    y: object.y * scale,
-                    width: object.width.expect("collision: no width") * scale,
-                    height: object.height.expect("collision: no height") * scale
-                });
-        }
-        Collisions {
-            blocks
-        }
-    }
-
     pub fn get_spawn_point(&self, scale: f32) -> (f32, f32) {
         let objects: &Vec<Object> = &self.map.objectgroups
             .iter()
             .find(|og| og.name == "spawn points")
             .expect("spawn points not found in level")
             .objects;
-        let object = objects.first().expect("spawn point not found");
-        return ((object.x * scale), (object.y * scale))
+        let spawn_point_object = objects.first().expect("spawn point not found");
+
+        return ((spawn_point_object.x * scale), (spawn_point_object.y * scale))
+    }
+
+    pub fn get_collisions(&self, scale: f32) -> Collisions {
+        Collisions {
+            blocks:  self.get_blocks(scale),
+            slopes: self.get_slopes(scale)
+        }
+    }
+
+    pub fn get_blocks(&self, scale: f32) -> Vec<Rectangle> {
+        let mut blocks = Vec::new();
+
+        for object in self.map.objectgroups
+            .iter()
+            .find(|og| og.name == "collisions")
+            .expect("collision blocks not found in level file")
+            .objects
+            .iter() {
+                blocks.push(Rectangle {
+                    x: object.x * scale,
+                    y: object.y * scale,
+                    width: object.width.expect("collision block: no width") * scale,
+                    height: object.height.expect("collision block: no height") * scale
+                });
+        }
+        return  blocks;
+    }
+
+    pub fn get_slopes(&self, scale: f32) -> Vec<Slope> {
+        let mut slopes = Vec::new();
+
+        for object in self.map.objectgroups
+            .iter()
+            .find(|og| og.name == "slopes")
+            .expect("slopes not found in level file")
+            .objects
+            .iter() {
+            let p2: Vec<f32> = object.polyline.as_ref()
+                .expect("slope: no polyline found")
+                .points
+                .split(|c| c == ' ' || c == ',')
+                .map(|s| s.parse::<f32>()
+                .expect("polyline coordinate is not a valid f32"))
+                .filter(|i| *i != 0f32)
+                .collect();
+
+            slopes.push(Slope {
+                p1: Point {
+                    x: object.x * scale,
+                    y: object.y * scale
+                },
+                // the second coordinate (and subsequent ones) is relative to the on in the object
+                p2: Point {
+                    x: (object.x + p2[0]) * scale,
+                    y: (object.y + p2[1]) * scale
+                },
+            });
+        }
+        return  slopes;
     }
 }
 

@@ -10,6 +10,6 @@ Progress:
 - [x] Read the Level map
 - [x] Render the background
 - [x] Collision detection
-- [ ] Slopes
+- [x] Slopes
 - [ ] Enemies
 - [ ] HUD
